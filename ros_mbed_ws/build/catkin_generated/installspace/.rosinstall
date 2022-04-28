@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/ailab/Project/07_Mbed_ros/ros_mbed_ws/install/setup.sh
