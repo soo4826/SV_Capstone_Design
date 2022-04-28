@@ -1,0 +1,7 @@
+# External Library
+gcc4mbed/
+temp/
+
+# Build file
+ros_mbed_ws/build
+ros_mbed_ws/devel
