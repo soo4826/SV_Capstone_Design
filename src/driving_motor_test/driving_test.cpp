@@ -18,16 +18,20 @@ DigitalOut automodeLED(LED1) ;
 DigitalOut directionLED(LED2);
 DigitalOut brakeLED(LED3);
 
-PwmIn thro(p21);
-PwmIn alie(p22);
-PwmIn elev(p23);
-PwmIn rudd(p24);
-PwmIn gear(p25);
-PwmIn aux1(p26);
+
+
+PwmIn thro(p26);
+PwmIn alie(p21);
+PwmIn elev(p22);
+PwmIn rudd(p23);
+PwmIn gear(p24);
+PwmIn aux1(p25);
 
 DigitalOut EnaOut(p27);
 DigitalOut DirOut(p28);
 DigitalOut PulOut(p29);
+
+AnalogIn steerIn(p17);
 
 AnalogOut accelOut(p18); //모터 스로틀, 초록선, 0~1
 DigitalOut brakeOut(p19); //브레이크
@@ -199,9 +203,8 @@ int main(void){
         
         steer = 2.0*(rudder-0.5);
         con_data[1]=steer;
-   
-        PCserial.printf("steer = %.2f\t", steer);
-        PCserial.printf("accel = %.2f\n\n\r", accel);
+        int sensor = 1000*steerIn;
+        PCserial.printf("steer = %d\n\r", sensor);
 
         accelOut = accel;
         brakeOut = brake;
