@@ -129,88 +129,88 @@ int main(void){
     Running[1] = RosRun;
     
     while(1){
-        throttle = thro.dutycycle();
-        aileron  = alie.dutycycle();
-        rudder   = rudd.dutycycle();
-        elevator = elev.dutycycle();
-        gearmode = gear.dutycycle();
-        auxmode  = aux1.dutycycle();
+//         throttle = thro.dutycycle();
+//         aileron  = alie.dutycycle();
+//         rudder   = rudd.dutycycle();
+//         elevator = elev.dutycycle();
+//         gearmode = gear.dutycycle();
+//         auxmode  = aux1.dutycycle();
         
-        throttle = (throttle - DUTYMIN)/(DUTYMAX-DUTYMIN);
-        aileron  = (aileron - DUTYMIN)/(DUTYMAX-DUTYMIN);
-        rudder   = (rudder - DUTYMIN)/(DUTYMAX-DUTYMIN);
-        elevator = (elevator - DUTYMIN)/(DUTYMAX-DUTYMIN);
-        gearmode = (gearmode - DUTYMIN)/(DUTYMAX-DUTYMIN);
-        auxmode = (auxmode - DUTYMIN)/(DUTYMAX-DUTYMIN);
+//         throttle = (throttle - DUTYMIN)/(DUTYMAX-DUTYMIN);
+//         aileron  = (aileron - DUTYMIN)/(DUTYMAX-DUTYMIN);
+//         rudder   = (rudder - DUTYMIN)/(DUTYMAX-DUTYMIN);
+//         elevator = (elevator - DUTYMIN)/(DUTYMAX-DUTYMIN);
+//         gearmode = (gearmode - DUTYMIN)/(DUTYMAX-DUTYMIN);
+//         auxmode = (auxmode - DUTYMIN)/(DUTYMAX-DUTYMIN);
         
-        if(throttle > 1.0){throttle = 1.0;}
-        else if(throttle < 0.0){throttle = 0.0;}
+//         if(throttle > 1.0){throttle = 1.0;}
+//         else if(throttle < 0.0){throttle = 0.0;}
         
-        if(aileron > 1.0){aileron = 1.0;}
-        else if(aileron < 0.0){aileron = 0.0;}
+//         if(aileron > 1.0){aileron = 1.0;}
+//         else if(aileron < 0.0){aileron = 0.0;}
         
-        if(rudder > 1.0){rudder = 1.0;}
-        else if(rudder < 0.0){rudder = 0.0;}
+//         if(rudder > 1.0){rudder = 1.0;}
+//         else if(rudder < 0.0){rudder = 0.0;}
         
-        if(elevator > 1.0){elevator = 1.0;}
-        else if(elevator < 0.0){elevator = 0.0;}
+//         if(elevator > 1.0){elevator = 1.0;}
+//         else if(elevator < 0.0){elevator = 0.0;}
         
-        if(gearmode > 1.0){gearmode = 1.0;}
-        else if(gearmode < 0.0){gearmode = 0.0;}
+//         if(gearmode > 1.0){gearmode = 1.0;}
+//         else if(gearmode < 0.0){gearmode = 0.0;}
         
-        if(auxmode > 1.0){auxmode = 1.0;}
-        else if(auxmode < 0.0){auxmode = 0.0;}
+//         if(auxmode > 1.0){auxmode = 1.0;}
+//         else if(auxmode < 0.0){auxmode = 0.0;}
         
-//        PCserial.printf("thro = %.2f\t", throttle);
-//        PCserial.printf("alie = %.2f\t", aileron);
-//        PCserial.printf("elev = %.2f\t", rudder);
-//        PCserial.printf("rudd = %.2f\t", elevator);
-//        PCserial.printf("gear = %.2f\t", gearmode);
-//        PCserial.printf("aux1 = %.2f\n\n\r", auxmode);
-////////////////////////////////////////////////////////////////////////////////
+// //        PCserial.printf("thro = %.2f\t", throttle);
+// //        PCserial.printf("alie = %.2f\t", aileron);
+// //        PCserial.printf("elev = %.2f\t", rudder);
+// //        PCserial.printf("rudd = %.2f\t", elevator);
+// //        PCserial.printf("gear = %.2f\t", gearmode);
+// //        PCserial.printf("aux1 = %.2f\n\n\r", auxmode);
+// ////////////////////////////////////////////////////////////////////////////////
 
-        if(auxmode > 0.5){automode = true ;  automodeLED = true ; }
-        else              {automode = false; automodeLED = false; }
+//         if(auxmode > 0.5){automode = true ;  automodeLED = true ; }
+//         else              {automode = false; automodeLED = false; }
         
         
         
-        if(gearmode > 0.5){direction = FORWARD ; directionLED = false;}
-        else              {direction = BACKWARD; directionLED = true;}
+//         if(gearmode > 0.5){direction = FORWARD ; directionLED = false;}
+//         else              {direction = BACKWARD; directionLED = true;}
         
-        if(automode == false){
-            if(elevator > 0.5){
-                accel = (elevator - 0.5)*2.0;
-                brake = false;
-                brakeLED = false;
-            }
-            else if(elevator < 0.5 && elevator > 0.4){
-                accel = 0.0;
-                brake = false;
-                brakeLED = false;
-            }
-            else{
-                accel = 0.0;
-                brake = true;
-                brakeLED = true;
-            }
-        }
-        else{
-            accel = 0.0;
-            brake = true;
-            brakeLED = true;
-        }
+//         if(automode == false){
+//             if(elevator > 0.5){
+//                 accel = (elevator - 0.5)*2.0;
+//                 brake = false;
+//                 brakeLED = false;
+//             }
+//             else if(elevator < 0.5 && elevator > 0.4){
+//                 accel = 0.0;
+//                 brake = false;
+//                 brakeLED = false;
+//             }
+//             else{
+//                 accel = 0.0;
+//                 brake = true;
+//                 brakeLED = true;
+//             }
+//         }
+//         else{
+//             accel = 0.0;
+//             brake = true;
+//             brakeLED = true;
+//         }
 
         
-        steer = 2.0*(rudder-0.5);
-        con_data[1]=steer;
+//         steer = 2.0*(rudder-0.5);
+//         con_data[1]=steer;
         int sensor = 1000*steerIn;
         PCserial.printf("steer = %d\n\r", sensor);
 
-        accelOut = accel;
-        brakeOut = brake;
-        directionOut = direction;
+//         accelOut = accel;
+//         brakeOut = brake;
+//         directionOut = direction;
 
-        Running[automode](con_data);
+//         Running[automode](con_data);
     }
     
 }

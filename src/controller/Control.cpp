@@ -10,9 +10,10 @@
 // #include <ros.h>
 // #include <std_msgs/Float32.h>
 
-#define STEP_THRESH 0.04
-#define STEER_MIN 0.1
-#define STEER_MAX 0.9
+#define STEP_THRESH 0.02
+#define STEER_MIN 0.09
+#define STEER_MAX 0.91
+#define STACK_RES 10
 
 // Spectrum
 #define DUTYMAX 0.0863
@@ -21,11 +22,13 @@
 #define FORWARD  1
 #define BACKWARD 0
 
+#define ACC_RESOLUTION 0.0005
 // Serial PCserial(USBTX,USBRX);
 
 DigitalOut automodeLED(LED1) ;
 DigitalOut directionLED(LED2);
 DigitalOut brakeLED(LED3);
+DigitalOut DebugLED(LED4);
 
 PwmIn thro(p30);
 PwmIn alie(p21);
@@ -35,11 +38,11 @@ PwmIn gear(p24);
 PwmIn aux1(p25);
 Servo breakServo(p26);
 
-DigitalOut EnaOut(p9);
-DigitalOut DirOut(p10);
-DigitalOut PulOut(p11);
+DigitalOut EnaOut(p27);
+DigitalOut DirOut(p28);
+DigitalOut PulOut(p29);
 
-AnalogIn potentiometer(p17);
+AnalogIn potentiometer(p15);
 AnalogOut accelOut(p18); //모터 스로틀, 초록선, 0~1
 DigitalOut brakeOut(p19); //브레이크
 DigitalOut directionOut(p12);//전진
@@ -48,13 +51,29 @@ Ticker Pulse;
 Timeout stepTimeout;
 
 float steering_value = 0.5;
+float currentAcc = 0.0;
+
+float rosAcc = 0.0;
+float rosStr = 0.0;
 
 // ROS Serial
-// ros::NodeHandle nh;
-// std_msgs::Float32 r_steer;
-// std_msgs::Float32 r_accel;
-// ros::Publisher pub_steer("steer", &r_steer);
-// ros::Publisher pub_accel("accel", &r_accel);
+ros::NodeHandle nh;
+std_msgs::Float32 r_steer;
+std_msgs::Float32 r_accel;
+ros::Publisher pub_steer("steer", &r_steer);
+ros::Publisher pub_accel("accel", &r_accel);
+ros::Subscriber<std_msgs::Float32> sub_steer("steer",steer_callback);
+ros::Subscriber<std_msgs::Float32> sub_accel("accel",accel_callback);
+
+void steer_callback(const std_msgs::Float32& msg)
+{
+    rosStr = msg.data;
+}
+void steer_callback(const std_msgs::Float32& msg)
+{
+    rosAcc = msg.data;
+}
+
 
 char defineStep(float potentiometer_value){
     float difference = potentiometer_value - steering_value;
@@ -64,7 +83,7 @@ char defineStep(float potentiometer_value){
 }
 
 void stepSTOP(){
-    EnaOut = false;
+    EnaOut = true;
     DirOut = true;
 }
 
@@ -73,15 +92,23 @@ void pulDown(){
 }
 
 void stepCW(){
+    EnaOut = false;
     DirOut = true;
     PulOut = true;
     stepTimeout.attach(&pulDown, 0.0003);
 }
 
 void stepCCW(){
+    EnaOut = false;
     DirOut = false;
     PulOut = true;
     stepTimeout.attach(&pulDown, 0.0003);
+}
+
+int stack = 0;
+
+void resetStack(){
+    stack = 0;
 }
 
 void step(){
@@ -91,10 +118,30 @@ void step(){
         stepSTOP();
     }
     else if(act&1){
-        stepCW();
+        if (stack < 0){
+            resetStack();
+            stepSTOP();
+        }
+        else if(abs(stack) > STACK_RES){
+            stepCW();
+        }
+        else{
+            stack++;
+            stepSTOP();
+        }
     }
     else{
-        stepCCW();
+        if (stack > 0){
+            resetStack();
+            stepSTOP();
+        }
+        else if(abs(stack)>STACK_RES){
+            stepCCW();
+        }
+        else{
+            stack--;
+            stepSTOP();
+        }
     }
 }
 
@@ -109,14 +156,22 @@ void stepCon(float Angle){
 }
 
 void AccCon(float Acc){
-    accelOut = Acc;
+    if(Acc > currentAcc){
+        currentAcc =  currentAcc + ACC_RESOLUTION;
+        accelOut = currentAcc;
+    }
+    else{
+        currentAcc = Acc;
+        accelOut = currentAcc;
+    }
+    
 }
 
 void BreakCon(float breakOn){
     breakServo.calibrate(0.0005, 45.0);
     if(breakOn<-0.1){
         brakeOut = true;
-        breakServo = 1.0 + 1.4*breakOn;
+        breakServo = 1.0 + 1.5*breakOn;
     }else{
         brakeOut = false;
         breakServo = 1.0;
@@ -132,14 +187,14 @@ void DirCon(float direction){
 }
 
 void RosRun(float *con_data){
-    // AccCon(con_data[4]);
+    AccCon(con_data[4]);
     stepCon(con_data[5]);
     BreakCon(con_data[6]);
     DirCon(con_data[7]);
 }
 
 void ControllerRun(float *con_data){
-    // AccCon(con_data[0]);
+    AccCon(con_data[0]);
     stepCon(con_data[1]);
     BreakCon(con_data[2]);
     DirCon(con_data[3]);
@@ -158,7 +213,8 @@ int main(void){
     float gearmode = 0.0;
     float auxmode = 0.0;
 
-    float con_data[8] = {0.0, 0.5, 1.0, FORWARD, 0.0, 0.5, 1.0, FORWARD};//{ControllerAcc, ControllerSteer, ControllerBreak, ControllerDirection, RosAcc, RosSteer, RosBreak, RosDirection}
+    float con_data[8] = {0.0, 0.5, 1.0, FORWARD, 0.0, 0.5, 1.0, FORWARD};
+    //{ControllerAcc, ControllerSteer, ControllerBreak, ControllerDirection, RosAcc, RosSteer, RosBreak, RosDirection}
 
     
     // ROS
@@ -172,6 +228,8 @@ int main(void){
     Running[0] = RosRun;
     Running[1] = ControllerRun;
 
+
+    int test = 0;
     while(1){
         throttle = thro.dutycycle();
         aileron  = alie.dutycycle();
@@ -223,7 +281,7 @@ int main(void){
         
         if(automode == true){
             if(elevator > 0.5){
-                con_data[0] = (elevator - 0.5)*2.0;
+                con_data[0] = (elevator - 0.5)*0.95;
                 con_data[1] = rudder;
                 con_data[2] = elevator-0.5;
                 con_data[3] = direction;
@@ -267,18 +325,23 @@ int main(void){
             con_data[7] = FORWARD;
             brakeLED = true;
         }
-        float accel = 1.0;
-        accelOut = accel;
+        // float accel = 0.9;
+        // accelOut = accel;
         // int sensor = 1000*potentiometer;
+        // if (test%10 == 0){
+        //     DebugLED = !DebugLED;
+        //     test = 1;
+        // }
+        // test++;
         // PCserial.printf("sensor = %d\n\r",sensor);
 
 
         // Publish ros topic into serial
-        // r_steer.data = con_data[1];
-        // pub_steer.publish(&r_steer);
-        // r_accel.data = con_data[0];
-        // pub_accel.publish(&r_accel);
-        // nh.spinOnce();
+        r_steer.data = con_data[1];
+        pub_steer.publish(&r_steer);
+        r_accel.data = con_data[0];
+        pub_accel.publish(&r_accel);
+        nh.spinOnce();
 
         Running[automode](con_data);
        
